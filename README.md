@@ -1,8 +1,9 @@
 # TecnoMovil Data – Procesamiento funcional en Java
 
-**EA2. Creación de repositorio** – Programación Orientada a Objetos II
-IU Digital de Antioquia · Docente: Leonardo Montes Gutiérrez
-Estudiante: Jhoan Esteban Pérez Henao · 2026
+- **Actividad:** EA2. Creación de repositorio
+- **Asignatura:** Programación Orientada a Objetos II – IU Digital de Antioquia
+- **Docente:** Leonardo Montes Gutiérrez
+- **Estudiante:** Jhoan Esteban Pérez Henao (trabajo individual) – 2026
 
 ## ¿De qué se trata?
 Solución al caso de estudio *TecnoMovil Data*: procesar los registros de entrada y salida
