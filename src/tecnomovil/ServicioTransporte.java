@@ -11,33 +11,31 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * Aqui estan todas las funciones que procesan los registros.
- *
- * Todas son funciones puras:
- *  - Solo usan lo que reciben por parametro.
- *  - No modifican la lista original (los streams crean resultados nuevos).
- *  - No imprimen ni guardan nada, solo retornan un resultado.
- * Por eso, si les paso los mismos datos, siempre devuelven lo mismo.
+ * Servicio que contiene las operaciones funcionales del caso de estudio.
+ * 
+ * Todas las operaciones estan disenadas como funciones puras:
+ * - No modifican la lista recibida por parametro (inmutabilidad).
+ * - No tienen efectos secundarios (no escriben en consola ni cambian variables externas).
+ * - Solo dependen de sus parametros de entrada y retornan nuevas estructuras.
  */
 public class ServicioTransporte {
 
     // ---------------- Funciones de orden superior ----------------
 
     /**
-     * Funcion de orden superior: recibe otra funcion (un Predicate) como parametro.
-     * El criterio de filtro lo decide quien la llama, usando una lambda.
+     * Funcion de orden superior que recibe una lista y una condicion (Predicate).
+     * Quien llama al metodo define el criterio usando una expresion lambda.
      */
     public static List<RegistroTransporte> filtrar(List<RegistroTransporte> registros,
                                                    Predicate<RegistroTransporte> criterio) {
         return registros.stream()
                 .filter(criterio)
-                .toList(); // toList() devuelve una lista inmutable
+                .toList(); // toList() genera una lista inmutable
     }
 
     /**
-     * Funcion de orden superior: recibe una Function que dice por que campo agrupar
-     * (estacion, ruta, usuario...) y cuenta cuantos registros hay en cada grupo.
-     * La reutilizo en varios requerimientos para no repetir codigo.
+     * Funcion de orden superior que recibe una funcion clasificadora (Function).
+     * Agrupa y cuenta las ocurrencias del campo especificado para evitar repetir codigo.
      */
     public static Map<String, Long> contarPor(List<RegistroTransporte> registros,
                                               Function<RegistroTransporte, String> campo) {
@@ -47,7 +45,10 @@ public class ServicioTransporte {
 
     // ---------------- a) Afluencia por estacion ----------------
 
-    /** Cuenta cuantas personas ENTRAN a cada estacion. */
+    /**
+     * Cuenta cuantos pasajeros ingresan a cada estacion.
+     * Filtra los registros con accion "entrada" y luego cuenta por nombre de estacion.
+     */
     public static Map<String, Long> afluenciaPorEstacion(List<RegistroTransporte> registros) {
         List<RegistroTransporte> entradas = filtrar(registros, r -> r.accion().equals("entrada"));
         return contarPor(entradas, RegistroTransporte::estacion);
@@ -55,14 +56,18 @@ public class ServicioTransporte {
 
     // ---------------- b) Horas pico ----------------
 
-    /** Agrupa los registros por la hora del dia (0 a 23) y cuenta cuantos hay en cada hora. */
+    /**
+     * Agrupa los registros por la hora del dia (0 a 23) y calcula el volumen de uso.
+     */
     public static Map<Integer, Long> registrosPorHora(List<RegistroTransporte> registros) {
         return registros.stream()
                 .collect(Collectors.groupingBy(r -> r.timestamp().getHour(),
                         TreeMap::new, Collectors.counting()));
     }
 
-    /** Devuelve las horas pico: las horas que tienen la mayor cantidad de registros. */
+    /**
+     * Identifica la hora o las horas con mayor flujo del dia buscando el valor maximo.
+     */
     public static List<Integer> horasPico(List<RegistroTransporte> registros) {
         Map<Integer, Long> porHora = registrosPorHora(registros);
         long maximo = porHora.values().stream()
@@ -77,7 +82,9 @@ public class ServicioTransporte {
 
     // ---------------- c) Rutas mas utilizadas ----------------
 
-    /** Devuelve las rutas ordenadas de la mas usada a la menos usada. */
+    /**
+     * Determina el volumen de viajes por ruta y las ordena de mayor a menor uso.
+     */
     public static List<Map.Entry<String, Long>> rutasMasUtilizadas(List<RegistroTransporte> registros) {
         return contarPor(registros, RegistroTransporte::ruta).entrySet().stream()
                 .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
@@ -86,7 +93,9 @@ public class ServicioTransporte {
 
     // ---------------- d) Patrones de viaje por usuario ----------------
 
-    /** Para cada usuario, lista las estaciones por donde paso, en orden de hora. */
+    /**
+     * Para cada usuario, obtiene la lista de estaciones visitadas en estricto orden cronologico.
+     */
     public static Map<String, List<String>> patronesDeViaje(List<RegistroTransporte> registros) {
         return registros.stream()
                 .sorted(Comparator.comparing(RegistroTransporte::timestamp))
@@ -97,8 +106,8 @@ public class ServicioTransporte {
     // ---------------- e) Tiempo promedio entre estaciones ----------------
 
     /**
-     * Calcula el tiempo promedio (en minutos) entre una entrada y la salida
-     * siguiente del mismo usuario, es decir, lo que dura el viaje entre dos estaciones.
+     * Calcula la duracion promedio (en minutos) entre una entrada y la salida consecutiva del mismo usuario.
+     * Utiliza IntStream para recorrer pares contiguos sin usar bucles for tradicionales.
      */
     public static double tiempoPromedioEntreEstaciones(List<RegistroTransporte> registros) {
         Map<String, List<RegistroTransporte>> porUsuario = registros.stream()
@@ -118,7 +127,9 @@ public class ServicioTransporte {
 
     // ---------------- f) Sobrecarga en rutas ----------------
 
-    /** Marca cada ruta como "CRITICA" si sus registros superan el umbral, o "NORMAL" si no. */
+    /**
+     * Clasifica cada ruta como "CRITICA" si supera el umbral de ocupacion indicado, o "NORMAL" en caso contrario.
+     */
     public static Map<String, String> estadoDeRutas(List<RegistroTransporte> registros, long umbral) {
         return contarPor(registros, RegistroTransporte::ruta).entrySet().stream()
                 .collect(Collectors.toMap(

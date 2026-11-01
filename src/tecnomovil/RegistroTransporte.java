@@ -3,12 +3,11 @@ package tecnomovil;
 import java.time.LocalDateTime;
 
 /**
- * Representa un registro del sistema de transporte de TecnoValle.
- * Cada vez que un usuario pasa la tarjeta por un validador se genera uno.
- *
- * Use un record porque sus atributos son final: una vez se crea el objeto
- * no se puede modificar (inmutabilidad). Asi ninguna funcion puede
- * cambiar los datos originales por error.
+ * Representa un registro de paso por estación en el sistema TecnoValle.
+ * 
+ * Uso un record en vez de una clase normal porque en Java los records son
+ * inmutables por defecto: todos sus campos son final, no tienen setters y
+ * evitan que alguien modifique los datos originales durante el procesamiento.
  */
 public record RegistroTransporte(
         String idUsuario,

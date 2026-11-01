@@ -4,15 +4,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Clase principal. Crea unos datos de prueba que simulan un dia del sistema
- * de transporte de TecnoValle y muestra el resultado de cada requerimiento.
- * Aqui si se imprime en consola; las funciones de ServicioTransporte no imprimen nada.
+ * Clase principal que ejecuta y comprueba la solucion del caso de estudio.
+ * 
+ * Define un conjunto de datos simulados (20 registros inmutables) y presenta
+ * por consola los resultados de cada requerimiento funcional.
  */
 public class Main {
 
     public static void main(String[] args) {
 
-        // List.of crea una lista inmutable: nadie le puede agregar ni quitar elementos.
+        // List.of garantiza que la coleccion inicial sea inmutable
         List<RegistroTransporte> registros = List.of(
                 reg("U01", "R1", "Central",     "entrada", 6, 50),
                 reg("U01", "R1", "Universidad", "salida",  7, 20),
@@ -39,53 +40,55 @@ public class Main {
         System.out.println("=== TecnoMovil Data - Procesamiento funcional ===");
         System.out.println("Registros cargados: " + registros.size());
 
-        // a)
+        // a) Afluencia por estacion
         System.out.println("\na) Afluencia por estacion (entradas):");
         ServicioTransporte.afluenciaPorEstacion(registros)
                 .forEach((estacion, total) -> System.out.println("   " + estacion + " -> " + total));
 
-        // b)
+        // b) Horas pico
         System.out.println("\nb) Registros por hora:");
         ServicioTransporte.registrosPorHora(registros)
                 .forEach((hora, total) -> System.out.println("   " + hora + ":00 -> " + total));
         System.out.println("   Hora(s) pico: " + ServicioTransporte.horasPico(registros));
 
-        // c)
+        // c) Rutas mas utilizadas
         System.out.println("\nc) Rutas mas utilizadas:");
         ServicioTransporte.rutasMasUtilizadas(registros)
                 .forEach(e -> System.out.println("   " + e.getKey() + " -> " + e.getValue() + " registros"));
 
-        // d)
+        // d) Patrones de viaje por usuario
         System.out.println("\nd) Patrones de viaje por usuario:");
         ServicioTransporte.patronesDeViaje(registros)
                 .forEach((usuario, estaciones) -> System.out.println("   " + usuario + ": " + estaciones));
 
-        // e)
+        // e) Tiempo promedio entre estaciones
         System.out.printf("%ne) Tiempo promedio entre estaciones: %.1f minutos%n",
                 ServicioTransporte.tiempoPromedioEntreEstaciones(registros));
 
-        // f)
+        // f) Sobrecarga en rutas
         long umbral = 8;
         System.out.println("\nf) Estado de las rutas (umbral: mas de " + umbral + " registros):");
         ServicioTransporte.estadoDeRutas(registros, umbral)
                 .forEach((ruta, estado) -> System.out.println("   " + ruta + " -> " + estado));
 
-        // Orden superior con una lambda definida aqui mismo
+        // Demostracion de funcion de orden superior usando una expresion lambda
         List<RegistroTransporte> manana = ServicioTransporte.filtrar(registros,
                 r -> r.timestamp().getHour() < 9);
         System.out.println("\nExtra) Registros antes de las 9:00 (filtro con lambda): " + manana.size());
 
-        // parallelStream: como las funciones son puras, el resultado es el mismo en paralelo
+        // Demostracion de seguridad en concurrencia (parallelStream) gracias a las funciones puras
         long entradasSecuencial = registros.stream().filter(r -> r.accion().equals("entrada")).count();
         long entradasParalelo = registros.parallelStream().filter(r -> r.accion().equals("entrada")).count();
         System.out.println("Extra) Entradas con stream: " + entradasSecuencial
                 + " | con parallelStream: " + entradasParalelo);
 
-        // Inmutabilidad: la lista original no cambio despues de todo el procesamiento
+        // Demostracion de inmutabilidad: la coleccion original no sufrio modificaciones
         System.out.println("Extra) Registros en la lista original al final: " + registros.size());
     }
 
-    /** Metodo de ayuda para crear registros mas corto (todos del mismo dia). */
+    /**
+     * Metodo auxiliar para construir registros de prueba de manera concisa.
+     */
     private static RegistroTransporte reg(String usuario, String ruta, String estacion,
                                           String accion, int hora, int minuto) {
         return new RegistroTransporte(usuario, ruta, estacion, accion,
